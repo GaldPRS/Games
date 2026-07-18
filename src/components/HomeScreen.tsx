@@ -1,14 +1,24 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateKey, todayKey } from '../core/date';
 import { formatTime } from '../core/share';
 import { GAMES } from '../games/registry';
 import { readSessionStatus } from '../hooks/useGameSession';
+import { prewarmPuzzles } from '../hooks/usePuzzle';
 import styles from './screens.module.css';
 
 const ICONS: Record<string, string> = { queens: '👑', tango: '🌗', zip: '🔗' };
 
 export function HomeScreen() {
   const date = todayKey();
+
+  // generate today's puzzles in the worker so game screens open instantly
+  useEffect(() => {
+    prewarmPuzzles(
+      GAMES.map((g) => g.id),
+      date,
+    );
+  }, [date]);
   return (
     <div className={styles.page}>
       <header className={styles.homeHeader}>

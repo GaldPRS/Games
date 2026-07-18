@@ -1,43 +1,46 @@
 import { useEffect, useState } from 'react';
-import { generateDaily, type GenerationResult } from '../core/generateDaily';
-import { GENERATORS } from '../games/generators';
+import type { GenerationResult } from '../core/generateDaily';
 import { KEYS, storageGet, storageSet } from '../core/storage';
+import { generatePuzzle } from '../core/workerClient';
 
 interface PuzzleStatus<P> {
   puzzle: P | null;
   error: string | null;
 }
 
-/** Load today's (or an archive date's) puzzle: cache-first, generate on miss. */
+/** Load a (game, date) puzzle: cache-first, generate in the worker on miss. */
 export function usePuzzle<P>(gameId: string, dateKey: string): PuzzleStatus<P> {
-  const [status, setStatus] = useState<PuzzleStatus<P>>({ puzzle: null, error: null });
+  const [status, setStatus] = useState<PuzzleStatus<P>>(() => {
+    const cached = storageGet<GenerationResult<P>>(KEYS.puzzle(gameId, dateKey));
+    return { puzzle: cached?.puzzle ?? null, error: null };
+  });
 
   useEffect(() => {
-    setStatus({ puzzle: null, error: null });
-    const key = KEYS.puzzle(gameId, dateKey);
-    const cached = storageGet<GenerationResult<P>>(key);
-    if (cached?.puzzle) {
-      setStatus({ puzzle: cached.puzzle, error: null });
-      return;
-    }
+    if (status.puzzle) return;
     let cancelled = false;
-    // generation is fast (<100 ms typical); defer a tick so the spinner paints
-    const t = setTimeout(() => {
-      try {
-        const gen = GENERATORS[gameId];
-        if (!gen) throw new Error(`unknown game ${gameId}`);
-        const result = generateDaily<P>(gameId, dateKey, gen.tryGenerate, gen.maxAttempts);
-        storageSet(key, result);
-        if (!cancelled) setStatus({ puzzle: result.puzzle, error: null });
-      } catch (e) {
+    generatePuzzle(gameId, dateKey)
+      .then((result) => {
+        storageSet(KEYS.puzzle(gameId, dateKey), result);
+        if (!cancelled) setStatus({ puzzle: result.puzzle as P, error: null });
+      })
+      .catch((e) => {
         if (!cancelled) setStatus({ puzzle: null, error: String(e) });
-      }
-    }, 30);
+      });
     return () => {
       cancelled = true;
-      clearTimeout(t);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, dateKey]);
 
   return status;
+}
+
+/** Warm the cache for all games for a date (fired from the home screen). */
+export function prewarmPuzzles(gameIds: string[], dateKey: string): void {
+  for (const gameId of gameIds) {
+    if (storageGet(KEYS.puzzle(gameId, dateKey))) continue;
+    generatePuzzle(gameId, dateKey)
+      .then((result) => storageSet(KEYS.puzzle(gameId, dateKey), result))
+      .catch(() => {});
+  }
 }
