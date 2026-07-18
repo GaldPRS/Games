@@ -1,0 +1,74 @@
+.board {
+  display: grid;
+  gap: 2px;
+  background: var(--board-line);
+  border: 2px solid var(--board-line);
+  border-radius: 12px;
+  overflow: hidden;
+  width: min(92vw, 420px);
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+
+.cell {
+  position: relative;
+  background: var(--cell-bg);
+  border: none;
+  padding: 0;
+  font-size: clamp(18px, 5.5vw, 30px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell:active {
+  filter: brightness(0.92);
+}
+
+.given {
+  background: var(--cell-given-bg);
+  cursor: default;
+}
+
+.error {
+  background: var(--cell-error-bg);
+}
+
+.symbol {
+  line-height: 1;
+  user-select: none;
+}
+
+.glyph {
+  position: absolute;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--glyph-bg);
+  color: var(--glyph-fg);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.glyphRight {
+  right: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.glyphBottom {
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.glyphError {
+  background: var(--danger);
+  color: #fff;
+}
