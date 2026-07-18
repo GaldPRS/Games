@@ -1,0 +1,70 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f6f5f2;
+  --fg: #1c1c28;
+  --muted: #6b6b7b;
+  --card-bg: #ffffff;
+  --card-border: #e5e3dd;
+  --board-line: #3a3a4a;
+  --grid-line: #d8d6d0;
+  --cell-bg: #ffffff;
+  --cell-given-bg: #efede8;
+  --cell-error-bg: #fcd5d5;
+  --glyph-bg: #3a3a4a;
+  --glyph-fg: #ffffff;
+  --danger: #dc2626;
+  --accent: #7c5cff;
+  --wall: #3a3a4a;
+  --zip-path: #ff8b3d;
+  --zip-path-cell: #ffe8d6;
+  --zip-head-cell: #ffd4ad;
+  --badge-bg: #1c1c28;
+  --badge-fg: #ffffff;
+  --success: #16a34a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14141e;
+    --fg: #ececf2;
+    --muted: #9a9aad;
+    --card-bg: #1e1e2c;
+    --card-border: #2c2c3e;
+    --board-line: #8a8aa0;
+    --grid-line: #34344a;
+    --cell-bg: #232334;
+    --cell-given-bg: #2c2c40;
+    --cell-error-bg: #58242a;
+    --glyph-bg: #ececf2;
+    --glyph-fg: #14141e;
+    --wall: #c9c9dc;
+    --zip-path-cell: #4a3323;
+    --zip-head-cell: #644630;
+    --badge-bg: #ececf2;
+    --badge-fg: #14141e;
+  }
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+}
