@@ -26,12 +26,20 @@ export function getStats(gameId: string): GameStats {
 /**
  * Record a completed puzzle. Streaks only advance when the puzzle is solved
  * on its own date — archive replays count toward totals but not streaks.
+ * Hint-assisted solves never set a best time.
  */
-export function recordCompletion(gameId: string, dateKey: string, elapsedMs: number): GameStats {
+export function recordCompletion(
+  gameId: string,
+  dateKey: string,
+  elapsedMs: number,
+  hintsUsed = 0,
+): GameStats {
   const stats = getStats(gameId);
   stats.completed += 1;
   stats.totalMs += elapsedMs;
-  if (stats.bestMs === null || elapsedMs < stats.bestMs) stats.bestMs = elapsedMs;
+  if (hintsUsed === 0 && (stats.bestMs === null || elapsedMs < stats.bestMs)) {
+    stats.bestMs = elapsedMs;
+  }
 
   const isToday = dateKey === todayKey();
   if (isToday && stats.lastCompletedDate !== dateKey) {

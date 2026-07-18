@@ -1,6 +1,7 @@
 import type { GameDefinition } from '../types';
 import { QueensBoard } from './QueensGame';
 import { tryGenerateQueens } from './generate';
+import { applyQueensHint } from './hint';
 import type { QueensPuzzle, QueensState } from './types';
 import { isQueensSolved } from './validate';
 
@@ -22,6 +23,7 @@ export const queensGame: GameDefinition<QueensPuzzle, QueensState> = {
   tryGenerate: tryGenerateQueens,
   createInitialState: (puzzle) => ({ cells: new Array(puzzle.size * puzzle.size).fill(0) }),
   isSolved: isQueensSolved,
+  applyHint: applyQueensHint,
   Board: QueensBoard,
   shareGrid: (puzzle, state) => {
     const rows: string[] = [];

@@ -141,12 +141,39 @@
   margin-top: 2px;
 }
 
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 14px;
+}
+
 .timer {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
   font-size: 15px;
   font-weight: 600;
-  margin: 10px 0 16px;
+}
+
+.hintCount {
+  color: var(--muted);
+}
+
+.pillBtn {
+  padding: 7px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 88px;
+}
+
+.pillBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .boardWrap {

@@ -1,6 +1,7 @@
 import type { GameDefinition } from '../types';
 import { ZipBoard } from './ZipGame';
 import { tryGenerateZip } from './generate';
+import { applyZipHint } from './hint';
 import type { ZipPuzzle, ZipState } from './types';
 import { isZipSolved } from './validate';
 
@@ -20,6 +21,7 @@ export const zipGame: GameDefinition<ZipPuzzle, ZipState> = {
   tryGenerate: tryGenerateZip,
   createInitialState: (puzzle) => ({ path: [puzzle.waypoints[0]] }),
   isSolved: isZipSolved,
+  applyHint: applyZipHint,
   Board: ZipBoard,
   shareGrid: () => '',
 };
