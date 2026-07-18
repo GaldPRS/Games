@@ -1,0 +1,47 @@
+.board {
+  display: grid;
+  border: 3px solid var(--board-line);
+  border-radius: 12px;
+  overflow: hidden;
+  width: min(92vw, 440px);
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+
+.cell {
+  position: relative;
+  border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0;
+  font-size: clamp(14px, 4.5vw, 26px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell:active {
+  filter: brightness(0.9);
+}
+
+.error::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(220, 38, 38, 0.35);
+  pointer-events: none;
+}
+
+.mark {
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 700;
+  font-size: 0.8em;
+  user-select: none;
+}
+
+.queen {
+  user-select: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}

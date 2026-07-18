@@ -21,6 +21,8 @@ export interface GameDefinition<P = unknown, S = unknown> {
   color: string; // accent color for cards/icons
   rules: string[];
   firstDate: string;
+  /** Attempt budget for generateDaily; default 200. Raise for low-acceptance generators. */
+  maxAttempts?: number;
   tryGenerate(rng: Rng, attempt: number): P | null;
   createInitialState(puzzle: P): S;
   isSolved(puzzle: P, state: S): boolean;
