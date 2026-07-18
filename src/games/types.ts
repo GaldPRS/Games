@@ -26,6 +26,8 @@ export interface GameDefinition<P = unknown, S = unknown> {
   tryGenerate(rng: Rng, attempt: number): P | null;
   createInitialState(puzzle: P): S;
   isSolved(puzzle: P, state: S): boolean;
+  /** Apply one correct move (fixing a wrong move first if any). Null when solved/no-op. */
+  applyHint(puzzle: P, state: S): S | null;
   Board: React.ComponentType<GameBoardProps<P, S>>;
   shareGrid(puzzle: P, state: S): string;
 }

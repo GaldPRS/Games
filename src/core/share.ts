@@ -11,8 +11,10 @@ export function buildShareText(
   elapsedMs: number,
   emojiGrid: string,
   url: string,
+  hintsUsed = 0,
 ): string {
-  const lines = [`${gameName} #${puzzleNo} — ${formatTime(elapsedMs)}`];
+  const hints = hintsUsed > 0 ? ` · 💡${hintsUsed}` : '';
+  const lines = [`${gameName} #${puzzleNo} — ${formatTime(elapsedMs)}${hints}`];
   if (emojiGrid) lines.push(emojiGrid);
   lines.push(url);
   return lines.join('\n');

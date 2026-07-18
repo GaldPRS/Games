@@ -1,6 +1,7 @@
 import type { GameDefinition } from '../types';
 import { TangoBoard } from './TangoGame';
 import { tryGenerateTango } from './generate';
+import { applyTangoHint } from './hint';
 import type { TangoPuzzle, TangoState } from './types';
 import { isTangoSolved } from './validate';
 
@@ -22,6 +23,7 @@ export const tangoGame: GameDefinition<TangoPuzzle, TangoState> = {
   tryGenerate: tryGenerateTango,
   createInitialState: (puzzle) => ({ cells: puzzle.given.slice() }),
   isSolved: isTangoSolved,
+  applyHint: applyTangoHint,
   Board: TangoBoard,
   shareGrid: (puzzle, state) => {
     const rows: string[] = [];

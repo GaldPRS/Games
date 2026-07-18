@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatDateKey, isValidDateKey, puzzleNumber, todayKey } from '../core/date';
 import { buildShareText, formatTime, shareResult } from '../core/share';
@@ -40,6 +40,7 @@ function GameScreenInner({
   const [showWin, setShowWin] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [, tick] = useState(0);
+  const hintReadyAt = useRef(0); // per-mount cooldown; reload resets it
 
   // 1s timer repaint while playing
   useEffect(() => {
@@ -61,12 +62,29 @@ function GameScreenInner({
       session.elapsedMs,
       game.shareGrid(puzzle, session.state),
       APP_URL,
+      session.hintsUsed,
     );
     const how = await shareResult(text);
     if (how === 'copied') {
       setToast('Copied to clipboard!');
       setTimeout(() => setToast(null), 2000);
     }
+  };
+
+  const HINT_COOLDOWN_MS = 10_000;
+  const cooldownLeft = Math.max(0, hintReadyAt.current - Date.now());
+  const useHint = () => {
+    if (!session || cooldownLeft > 0) return;
+    if (session.hint()) {
+      hintReadyAt.current = Date.now() + HINT_COOLDOWN_MS;
+      tick((n) => n + 1); // repaint immediately so the countdown shows
+    }
+  };
+
+  const replay = () => {
+    session?.replay();
+    hintReadyAt.current = 0;
+    setShowWin(false);
   };
 
   const Board = game.Board;
@@ -88,8 +106,25 @@ function GameScreenInner({
       </header>
 
       {session && (
-        <div className={styles.timer}>
-          {session.solved ? `Solved in ${formatTime(session.elapsedMs)} 🎉` : formatTime(session.elapsedMs)}
+        <div className={styles.controlRow}>
+          <div className={styles.timer}>
+            {session.solved ? `Solved in ${formatTime(session.elapsedMs)} 🎉` : formatTime(session.elapsedMs)}
+            {session.hintsUsed > 0 && <span className={styles.hintCount}> · 💡{session.hintsUsed}</span>}
+          </div>
+          {session.solved ? (
+            <button className={styles.pillBtn} onClick={replay}>
+              ↻ Replay
+            </button>
+          ) : (
+            <button
+              className={styles.pillBtn}
+              disabled={cooldownLeft > 0}
+              onClick={useHint}
+              aria-label="Hint"
+            >
+              💡 {cooldownLeft > 0 ? `${Math.ceil(cooldownLeft / 1000)}s` : 'Hint'}
+            </button>
+          )}
         </div>
       )}
 
@@ -128,6 +163,7 @@ function GameScreenInner({
               <div className={styles.dialogBig}>🏆</div>
               <div className={styles.dialogMeta}>
                 Solved in {formatTime(session.elapsedMs)}
+                {session.hintsUsed > 0 && <> · 💡{session.hintsUsed}</>}
                 {session.stats && dateKey === todayKey() && (
                   <> · 🔥 {effectiveStreak(session.stats)}-day streak</>
                 )}
@@ -135,6 +171,9 @@ function GameScreenInner({
               <div className={styles.dialogActions}>
                 <button className={styles.primaryBtn} onClick={share}>
                   Share result
+                </button>
+                <button className={styles.secondaryBtn} onClick={replay}>
+                  ↻ Replay
                 </button>
                 <Link to="/" className={styles.secondaryBtn}>
                   Back to games

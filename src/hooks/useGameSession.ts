@@ -8,14 +8,21 @@ export interface SessionRecord<S> {
   elapsedMs: number;
   solved: boolean;
   statsRecorded: boolean;
+  hintsUsed?: number; // absent in pre-hints sessions → 0
+  firstSolvedMs?: number; // preserved across replays for card/archive display
 }
 
 interface GameSession<S> {
   state: S;
   solved: boolean;
   elapsedMs: number;
+  hintsUsed: number;
   stats: GameStats | null; // set at the moment of solving
   setState(next: S): void;
+  /** Apply one hint move; returns false when no hint was available. */
+  hint(): boolean;
+  /** Reset board and timer to re-solve. Stats/streaks are never re-recorded. */
+  replay(): void;
 }
 
 /**
@@ -73,28 +80,62 @@ export function useGameSession<P, S>(
     return () => document.removeEventListener('visibilitychange', onVis);
   }, [key]);
 
-  const setState = useCallback(
-    (nextState: S) => {
+  /** Shared move pipeline for taps and hints: persist, detect solve, record stats once. */
+  const commitState = useCallback(
+    (nextState: S, hintDelta: 0 | 1) => {
       if (!puzzle) return;
       setSession((s) => {
         if (!s || s.solved) return s;
         const elapsedMs = baseElapsedRef.current + (Date.now() - startRef.current);
         const solved = game.isSolved(puzzle, nextState);
+        const hintsUsed = (s.hintsUsed ?? 0) + hintDelta;
         const next: SessionRecord<S> = {
           state: nextState,
           elapsedMs,
           solved,
           statsRecorded: s.statsRecorded || solved,
+          hintsUsed,
+          firstSolvedMs: s.firstSolvedMs ?? (solved ? elapsedMs : undefined),
         };
         storageSet(key, next);
         if (solved && !s.statsRecorded) {
-          setStats(recordCompletion(game.id, dateKey, elapsedMs));
+          setStats(recordCompletion(game.id, dateKey, elapsedMs, hintsUsed));
         }
         return next;
       });
     },
     [game, dateKey, key, puzzle],
   );
+
+  const setState = useCallback((nextState: S) => commitState(nextState, 0), [commitState]);
+
+  const hint = useCallback((): boolean => {
+    if (!puzzle || !session || session.solved) return false;
+    const next = game.applyHint(puzzle, session.state);
+    if (next === null) return false;
+    commitState(next, 1);
+    return true;
+  }, [commitState, game, puzzle, session]);
+
+  const replay = useCallback(() => {
+    if (!puzzle) return;
+    setSession((s) => {
+      if (!s) return s;
+      baseElapsedRef.current = 0;
+      startRef.current = Date.now();
+      const next: SessionRecord<S> = {
+        state: game.createInitialState(puzzle),
+        elapsedMs: 0,
+        solved: false,
+        statsRecorded: s.statsRecorded, // a replay solve never re-records
+        hintsUsed: 0,
+        firstSolvedMs: s.firstSolvedMs,
+      };
+      storageSet(key, next);
+      return next;
+    });
+    setStats(null);
+  }, [game, key, puzzle]);
 
   if (!session) return null;
   return {
@@ -103,8 +144,11 @@ export function useGameSession<P, S>(
     elapsedMs: session.solved
       ? session.elapsedMs
       : baseElapsedRef.current + (Date.now() - startRef.current),
+    hintsUsed: session.hintsUsed ?? 0,
     stats,
     setState,
+    hint,
+    replay,
   };
 }
 
@@ -115,6 +159,7 @@ export function readSessionStatus(
 ): 'none' | 'inProgress' | { solvedMs: number } {
   const rec = storageGet<SessionRecord<unknown>>(KEYS.session(gameId, dateKey));
   if (!rec) return 'none';
-  if (rec.solved) return { solvedMs: rec.elapsedMs };
+  // once solved, the day stays "done" even while a replay is in progress
+  if (rec.solved || rec.statsRecorded) return { solvedMs: rec.firstSolvedMs ?? rec.elapsedMs };
   return 'inProgress';
 }
